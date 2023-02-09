@@ -1,0 +1,51 @@
+version: '3.0'
+
+services:
+  node:
+    container_name: Node
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.node
+    volumes:
+      - ../app:/app/app
+    ports:
+      - 8080:8080
+      - 9229:9229
+    depends_on:
+      - db
+    networks:
+      - graphql-network
+
+  db:
+    container_name: MySql
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    volumes:
+      - ./mysql:/var/lib/mysql
+      - ./logs/mysql:/var/log/mysql
+      - ./conf/my.cnf:/etc/mysql/my.cnf
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - graphql-network
+
+  adminer:
+    container_name: Adminer
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+    depends_on:
+      - db
+    networks:
+      - graphql-network
+
+networks:
+  graphql-network:
+    driver: bridge
